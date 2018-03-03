@@ -1,0 +1,46 @@
+#include "Card.h"
+#include "BitMap.h"
+
+Card::Card()
+{
+	m_bOpen = false;
+}
+
+
+Card::~Card()
+{
+}
+
+void Card::Init(BitMap* pBitMap, BitMap* Back, int x, int y, int index)
+{
+	m_pBitMap = pBitMap;
+	m_pBackBitMap = Back;
+	m_iX = x;
+	m_iY = y;
+	m_iIndex = index;
+}
+
+bool Card::OnClick(int x, int y)
+{
+	if (m_bOpen == true)
+		return false;
+
+	POINT pt = { x , y };
+	RECT rc = { m_iX , m_iY , m_iX + CARD_WIDTH , m_iY + CARD_HEIGHT };
+
+	if (PtInRect(&rc, pt))
+	{
+		m_bOpen = true;
+		return true;
+	}
+
+	return false;
+}
+
+void Card::Draw(HDC hdc)
+{
+	if (m_bOpen)
+		m_pBitMap->Draw(hdc, m_iX, m_iY);
+	else
+		m_pBackBitMap->Draw(hdc, m_iX, m_iY);
+}

@@ -1,0 +1,4 @@
+﻿  소스.cpp
+d:\게임아트학원\커서이동\커서이동\소스.cpp(25): warning C4838: 'int'에서 'SHORT'(으)로의 변환에는 축소 변환이 필요합니다.
+  커서이동.vcxproj -> D:\게임아트학원\커서이동\Debug\커서이동.exe
+  커서이동.vcxproj -> D:\게임아트학원\커서이동\Debug\커서이동.pdb (Full PDB)

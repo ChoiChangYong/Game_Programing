@@ -1,0 +1,7 @@
+﻿  뱀.cpp
+d:\게임아트학원\170823\170823\뱀.cpp(179): warning C4996: 'kbhit': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _kbhit. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\conio.h(458): note: 'kbhit' 선언을 참조하십시오.
+d:\게임아트학원\170823\170823\뱀.cpp(181): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\conio.h(452): note: 'getch' 선언을 참조하십시오.
+  170823.vcxproj -> D:\게임아트학원\170823\Debug\170823.exe
+  170823.vcxproj -> D:\게임아트학원\170823\Debug\170823.pdb (Full PDB)

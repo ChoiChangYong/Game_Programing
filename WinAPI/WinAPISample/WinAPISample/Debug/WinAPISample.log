@@ -1,0 +1,9 @@
+﻿First.obj : error LNK2005: "long __stdcall WndProc(struct HWND__ *,unsigned int,unsigned int,long)" (?WndProc@@YGJPAUHWND__@@IIJ@Z)이(가) DrawText.obj에 이미 정의되어 있습니다.
+First.obj : error LNK2005: _WinMain@16이(가) DrawText.obj에 이미 정의되어 있습니다.
+First.obj : error LNK2005: "struct HINSTANCE__ * g_hInst" (?g_hInst@@3PAUHINSTANCE__@@A)이(가) DrawText.obj에 이미 정의되어 있습니다.
+First.obj : error LNK2005: "wchar_t const * const lpszClass" (?lpszClass@@3PB_WB)이(가) DrawText.obj에 이미 정의되어 있습니다.
+TextOut.obj : error LNK2005: "long __stdcall WndProc(struct HWND__ *,unsigned int,unsigned int,long)" (?WndProc@@YGJPAUHWND__@@IIJ@Z)이(가) DrawText.obj에 이미 정의되어 있습니다.
+TextOut.obj : error LNK2005: _WinMain@16이(가) DrawText.obj에 이미 정의되어 있습니다.
+TextOut.obj : error LNK2005: "struct HINSTANCE__ * g_hInst" (?g_hInst@@3PAUHINSTANCE__@@A)이(가) DrawText.obj에 이미 정의되어 있습니다.
+TextOut.obj : error LNK2005: "wchar_t const * const lpszClass" (?lpszClass@@3PB_WB)이(가) DrawText.obj에 이미 정의되어 있습니다.
+C:\Users\ChangYong\Desktop\용용\게임아트학원\WinAPISample\Debug\WinAPISample.exe : fatal error LNK1169: 여러 번 정의된 기호가 있습니다.

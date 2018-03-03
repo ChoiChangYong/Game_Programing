@@ -1,0 +1,6 @@
+﻿  오목.cpp
+d:\게임아트학원\170804\170804\오목.cpp(237): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\conio.h(452): note: 'getch' 선언을 참조하십시오.
+d:\게임아트학원\170804\170804\오목.cpp(79): warning C4715: 'CheckCount': 모든 제어 경로에서 값을 반환하지는 않습니다.
+  170804.vcxproj -> D:\게임아트학원\170804\Debug\170804.exe
+  170804.vcxproj -> D:\게임아트학원\170804\Debug\170804.pdb (Full PDB)

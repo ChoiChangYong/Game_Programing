@@ -1,0 +1,6 @@
+﻿  Map.cpp
+  맵+클래스사용.cpp
+d:\게임아트학원\170828\170828\맵+클래스사용.cpp(22): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\conio.h(452): note: 'getch' 선언을 참조하십시오.
+  170828.vcxproj -> D:\게임아트학원\170828\Debug\170828.exe
+  170828.vcxproj -> D:\게임아트학원\170828\Debug\170828.pdb (Full PDB)
