@@ -40,7 +40,7 @@ void GameManager::setBlock(Block* pNew_Block)
 
 			if (m_iMine[mine_count] % m_iWidth == j && m_iMine[mine_count] / m_iWidth == i)
 			{
-				pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_BLOCK),
+				pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_MINE),
 					j % m_iWidth * CARD_WIDTH + 41, i % m_iHeight * CARD_HEIGHT + 43, TRUE, FALSE, FALSE);
 				mine_count++;
 				m_iMap[i][j] = MINE;

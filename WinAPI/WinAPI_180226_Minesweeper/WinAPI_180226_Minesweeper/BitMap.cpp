@@ -42,6 +42,7 @@ void BitMap::Init(HDC hdc, HINSTANCE hInst, int id)
 		wsprintf(image_name, TEXT("res\\block_8.bmp"));
 
 	m_hMemDC = CreateCompatibleDC(hdc);
+
 	m_hBitMap = (HBITMAP)LoadImage(NULL, image_name, IMAGE_BITMAP, 0, 0
 		, LR_CREATEDIBSECTION | LR_DEFAULTSIZE | LR_LOADFROMFILE);
 	m_hOldBitMap = (HBITMAP)SelectObject(m_hMemDC, m_hBitMap);
