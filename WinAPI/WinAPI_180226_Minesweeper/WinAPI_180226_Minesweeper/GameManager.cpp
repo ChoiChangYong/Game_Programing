@@ -40,7 +40,7 @@ void GameManager::setBlock(Block* pNew_Block)
 
 			if (m_iMine[mine_count] % m_iWidth == j && m_iMine[mine_count] / m_iWidth == i)
 			{
-				pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_MINE),
+				pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_BLOCK),
 					j % m_iWidth * CARD_WIDTH + 41, i % m_iHeight * CARD_HEIGHT + 43, TRUE, FALSE, FALSE);
 				mine_count++;
 				m_iMap[i][j] = MINE;
@@ -135,62 +135,36 @@ void GameManager::SetGameMode(GAME_MODE mode)
 */
 void GameManager::Check(int x, int y)
 {
+	Point pt;
 	Block* pBlock = new Block();
 	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
 	{
 		if (((*iter)->getX() - 41) / CARD_WIDTH == x && ((*iter)->getY() - 43) / CARD_HEIGHT == y)
 			pBlock = (*iter);
 	}
-	int mine_count = 0;
+	int ix, iy, mine_count = 0;
+	ix = x;
+	iy = y;
 
-	
-
-	for (int i = 0; i < m_iHeight; i++)
-	{
-		for (int j = 0; j < m_iWidth; j++)
-		{
-			if (j == x - 1 && i == y - 1)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x - 1 && i == y)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x - 1 && i == y + 1)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x && i == y + 1)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x + 1 && i == y + 1)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x + 1 && i == y)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x + 1 && i == y - 1)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-			if (j == x && i == y - 1)
-			{
-				if (m_iMap[i][j] == MINE) // 해당 Block이 지뢰일 때
-					mine_count++;
-			}
-		}
-	}
+	/*
+	상하좌우대각선 체크
+	*/
+	if (m_iMap[y - 1][x - 1] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y][x - 1] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y + 1][x - 1] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y + 1][x] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y + 1][x + 1] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y][x + 1] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y - 1][x + 1] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
+	if (m_iMap[y - 1][x] == MINE) // 해당 Block이 지뢰일 때
+		mine_count++;
 
 	/*
 		주변에 지뢰가 하나도 없을 경우, 해당 위치 출력 후 다시 주변 검사
@@ -198,12 +172,25 @@ void GameManager::Check(int x, int y)
 	if (mine_count == 0)
 	{
 		setBlock(pBlock, mine_count);
-		
-		for (int i = 0; i < m_iHeight; i++)
+		for (int i = 0; i < DIRECTION_END; i++)
+		{
+			pt = ptDir[i];
+			while (true)
+			{
+				ix += pt.x;
+				iy += pt.y;
+				Check(ix, iy);
+				if (m_iMap[iy][ix] == OPEN)
+					break;
+			}
+		}
+	}
+	
+	/*
+	for (int i = 0; i < m_iHeight; i++)
 		{
 			for (int j = 0; j < m_iWidth; j++)
 			{
-				/*
 				if (j == x - 1 && i == y - 1)
 				{
 					Check(j, i);
@@ -232,7 +219,6 @@ void GameManager::Check(int x, int y)
 					Check(j, i);
 					continue;
 				}
-				*/
 				if (j == x + 1 && i == y)
 				{
 					Check(j, i);
@@ -252,6 +238,7 @@ void GameManager::Check(int x, int y)
 		}
 
 	}
+	*/
 	/*
 		주변에 지뢰가 하나라도 있을 경우, 해당 위치 출력 후 끝
 	*/

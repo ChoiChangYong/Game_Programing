@@ -9,11 +9,28 @@ using namespace std;
 #define MINE 1
 #define OPEN 2
 
+struct Point
+{
+	int x;
+	int y;
+};
 enum GAME_MODE
 {
 	GAME_MODE_EASY,
 	GAME_MODE_NORMAL,
 	GAME_MODE_HARD
+};
+enum DIRECTION
+{
+	DIRECTION_LT,
+	DIRECTION_T,
+	DIRECTION_RT,
+	DIRECTION_L,
+	DIRECTION_R,
+	DIRECTION_LB,
+	DIRECTION_B,
+	DIRECTION_RB,
+	DIRECTION_END
 };
 class ResManager;
 class Block;
@@ -34,6 +51,13 @@ private:
 	int m_iHeight;
 	int m_iMine[24];
 	int m_iMap[16][24];
+	struct Point
+	{
+		int x;
+		int y;
+	};
+	Point ptDir[DIRECTION_END] = { { -1, -1 },{ -1, 0 },{ -1, +1 },{ 0, -1 },{ 0, +1 },{ +1, -1 },{ +1, 0 },{ +1, +1 } };
+
 public:
 	static GameManager* GetInstance()
 	{
