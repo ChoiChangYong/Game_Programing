@@ -175,6 +175,7 @@ void GameManager::Check(int x, int y)
 		for (int i = 0; i < DIRECTION_END; i++)
 		{
 			pt = ptDir[i];
+			/*
 			while (true)
 			{
 				ix += pt.x;
@@ -182,7 +183,10 @@ void GameManager::Check(int x, int y)
 				Check(ix, iy);
 				if (m_iMap[iy][ix] == OPEN)
 					break;
+				if (ix<0 || iy<0 || ix>m_iWidth || iy>m_iHeight)
+					break;
 			}
+			*/
 		}
 	}
 	
