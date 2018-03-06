@@ -1,0 +1,4 @@
+﻿  GameManager.cpp
+c:\users\changyong\documents\visual studio 2015\projects\winapi_180306__minesweeper\winapi_180306__minesweeper\gamemanager.cpp(206): warning C4101: 'pt' :참조되지 않은 지역 변수입니다.
+  WinAPI_180306__Minesweeper.vcxproj -> c:\users\changyong\documents\visual studio 2015\Projects\WinAPI_180306__Minesweeper\Debug\WinAPI_180306__Minesweeper.exe
+  WinAPI_180306__Minesweeper.vcxproj -> c:\users\changyong\documents\visual studio 2015\Projects\WinAPI_180306__Minesweeper\Debug\WinAPI_180306__Minesweeper.pdb (Full PDB)
