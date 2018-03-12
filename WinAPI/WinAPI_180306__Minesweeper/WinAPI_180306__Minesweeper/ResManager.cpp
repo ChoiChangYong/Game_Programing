@@ -30,6 +30,7 @@ void ResManager::Release()
 {
 	for (int i = 0; i < RES_TYPE_END; i++)
 	{
+		m_pBitMap[i]->Release();
 		SAFE_DELETE(m_pBitMap[i]);
 	}
 }

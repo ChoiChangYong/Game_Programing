@@ -1,5 +1,6 @@
 #include "GameManager.h"
 #include "ResManager.h"
+#include "BitMap.h"
 #include "Macro.h"
 #include "Block.h"
 #include <time.h>
@@ -13,22 +14,17 @@ GameManager::GameManager()
 	m_eGameMode = GAME_MODE_EASY;
 	m_iWidth = (m_eGameMode + 1) * 8;
 	m_iHeight = (m_eGameMode + 1) * 8;
-	memset(m_iMine, BLOCK, m_iWidth * sizeof(int));
-	for(int i = 0; i < m_iHeight; i++)
-		memset(m_iMap[i], BLOCK, m_iWidth * sizeof(int));
+	memset(m_iMine, 0, m_iWidth * sizeof(int));
+	memset(m_iMap, 0, m_iWidth * m_iHeight * sizeof(int));
+	m_nFlag_Count = 0;
+	m_nTimeCount = 0;
+	m_nMine_Count = 0;
 }
 GameManager::~GameManager()
 {
 }
 
-
-void GameManager::setBackGround(Block* pNew_Block)
-{
-	pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_BACKGROUND), 0, 0, FALSE, FALSE, FALSE);
-	m_pBackGround = pNew_Block;
-}
-
-void GameManager::setBlock(Block* pNew_Block)
+void GameManager::setBlock()
 {
 	int mine_count = 0;
 
@@ -36,21 +32,19 @@ void GameManager::setBlock(Block* pNew_Block)
 	{
 		for (int j = 0; j < m_iWidth; j++)
 		{
-			pNew_Block = new Block();
+			m_iMap[i][j] = new Block();
 
 			if (m_iMine[mine_count] % m_iWidth == j && m_iMine[mine_count] / m_iWidth == i)
 			{
-				pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_MINE),
+				m_iMap[i][j]->Init(m_pResManager->GetBitMap(RES_TYPE_BLOCK),
 					j % m_iWidth * CARD_WIDTH + 41, i % m_iHeight * CARD_HEIGHT + 43, TRUE, FALSE, FALSE);
 				mine_count++;
-				m_iMap[i][j] = MINE;
 			}
 			else
 			{
-				pNew_Block->Init(m_pResManager->GetBitMap(RES_TYPE_BLOCK),
+				m_iMap[i][j]->Init(m_pResManager->GetBitMap(RES_TYPE_BLOCK),
 					j % m_iWidth * CARD_WIDTH + 41, i % m_iHeight * CARD_HEIGHT + 43, FALSE, FALSE, FALSE);
 			}
-			m_vecBlock.push_back(pNew_Block);
 		}
 	}
 }
@@ -59,7 +53,8 @@ void GameManager::setMine()
 {
 	bool bFound;
 
-	srand((unsigned int)time(NULL));
+	srand(unsigned(time(NULL)));
+	//srand(0);
 
 	for (int i = 0; i < m_iWidth; i++)
 	{
@@ -81,42 +76,49 @@ void GameManager::setMine()
 	}
 
 	sort(m_iMine, m_iMine + m_iWidth);
+	m_nMine_Count = m_iWidth;
 }
 
 void GameManager::Init(HWND hWnd, HINSTANCE hInst, HDC hdc)
 {
-	m_hWnd = hWnd;
 	m_pResManager = new ResManager();
 	m_pResManager->Init(hdc, hInst);
+	m_hWnd = hWnd;
+	
 
-	Block* pNew_Block = new Block();
+	//배경 생성
 
-	/*
-	배경 생성
-	*/
-	setBackGround(pNew_Block);
-	/*
-	지뢰 생성
-	*/
+	m_pBackGround = new BitMap();
+	m_pBackGround->Init(hdc, hInst, RES_TYPE_BACKGROUND);
+
+	//지뢰 생성
+
 	setMine();
-	/*
-	블록 생성
-	*/
-	setBlock(pNew_Block);
+
+	//블록 생성
+	setBlock();
+
+	SetTimer(m_hWnd, 1, 1000, NULL);
 }
 
 void GameManager::SetGameMode(GAME_MODE mode)
 {
+	for (int i = 0; i < m_iHeight; i++)
+	{
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			SAFE_DELETE(m_iMap[i][j]);
+		}
+	}
 	m_eGameMode = mode;
 	m_iWidth = (m_eGameMode + 1) * 8;
 	if (m_eGameMode == GAME_MODE_HARD)
-		m_eGameMode = GAME_MODE_NORMAL;
-	m_iHeight = (m_eGameMode + 1) * 8;
+		m_iHeight = (m_eGameMode) * 8;
+	else
+		m_iHeight = (m_eGameMode + 1) * 8;
 
-	memset(m_iMine, BLOCK, m_iWidth * sizeof(int));
-	for (int i = 0; i < m_iHeight; i++)
-		memset(m_iMap[i], BLOCK, m_iWidth * sizeof(int));
-	m_vecBlock.clear();
+	memset(m_iMine, 0, m_iWidth * sizeof(int));
+	memset(m_iMap, 0, m_iWidth * m_iHeight * sizeof(int));
 
 	/*
 	지뢰 생성
@@ -125,243 +127,244 @@ void GameManager::SetGameMode(GAME_MODE mode)
 	/*
 	블록 생성
 	*/
-	Block* pNew_Block = new Block();
-	setBlock(pNew_Block);
+	setBlock();
+
+	KillTimer(m_hWnd, 1);
+	m_nTimeCount = 0;
+	SetTimer(m_hWnd, 1, 1000, NULL);
 
 	InvalidateRect(m_hWnd, NULL, true);
 }
 
 /*
-상하좌우대각선 지뢰 체크
+주변 8방향 지뢰 체크 & 열기
 */
-void GameManager::Check(int x, int y, bool flag)
+void GameManager::Check(int x, int y)
 {
 	Point pt;
-	pBlock = new Block();
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
-	{
-		if (((*iter)->getX() - 41) / CARD_WIDTH == x && ((*iter)->getY() - 43) / CARD_HEIGHT == y)
-			pBlock = (*iter);
-	}
 	int mine_count = 0;
 	/*
-	상하좌우대각선 체크
+	상하좌우대각선 지뢰 체크
 	*/
-	if (m_iMap[y - 1][x - 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y][x - 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y + 1][x - 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y + 1][x] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y + 1][x + 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y][x + 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y - 1][x + 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-	if (m_iMap[y - 1][x] == MINE) // 해당 Block이 지뢰일 때
-		mine_count++;
-
+	mine_count = get_Surround_MineCount(x, y);
 	/*
 		주변에 지뢰가 하나도 없을 경우, 해당 위치 출력 후 다시 주변 검사
 	*/
-	if (mine_count == 0 && flag == FALSE)
+	if (mine_count == 0)
 	{
-		setBlock(pBlock, mine_count, x, y);
-		for (int i = 0; i < DIRECTION_END; i++)
-		{
-			pt = ptDir[i];
-			int ix = x;
-			int iy = y;
-
-			ix += pt.x;
-			iy += pt.y;
-			if (ix<0 || iy<0 || ix>m_iWidth || iy>m_iHeight)
-			{
-				continue;
-			}
-			else if (m_iMap[iy][ix] == OPEN)
-			{
-				continue;
-			}
-			else
-			{
-				Check(ix, iy);
-			}
-		}
+		setBlock(mine_count, x, y);
+		Open_Surroundings(x, y);
 	}
 	/*
 		주변에 지뢰가 하나라도 있을 경우, 해당 위치 출력 후 끝
 	*/
 	else
 	{
-		setBlock(pBlock, mine_count, x, y);
+		setBlock(mine_count, x, y);
 	}
+}
+
+bool GameManager::Check_Range(int x, int y)
+{
+	bool flag;
+	if (x<0 || y<0 || x >= m_iWidth || y >= m_iHeight)
+		flag = FALSE;
+	else
+		flag = TRUE;
+	return flag;
 }
 
 void GameManager::M_Button_Check(int x, int y)
 {
-	Point pt;
-	pBlock = new Block();
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
-	{
-		if (((*iter)->getX() - 41) / CARD_WIDTH == x && ((*iter)->getY() - 43) / CARD_HEIGHT == y)
-			pBlock = (*iter);
-	}
 	int mine_count = 0;
 	int flag_count = 0;
 	/*
 	상하좌우대각선 지뢰 체크
 	*/
-	if (m_iMap[y - 1][x - 1] == MINE) // 해당 Block이 지뢰일 때
-		mine_count += getMine_Surroundings(x - 1, y - 1);
-	if (m_iMap[y][x - 1] == MINE)
-		mine_count += getMine_Surroundings(x - 1, y);
-	if (m_iMap[y + 1][x - 1] == MINE)
-		mine_count += getMine_Surroundings(x - 1, y + 1);
-	if (m_iMap[y + 1][x] == MINE)
-		mine_count += getMine_Surroundings(x, y + 1);
-	if (m_iMap[y + 1][x + 1] == MINE)
-		mine_count += getMine_Surroundings(x + 1, y + 1);
-	if (m_iMap[y][x + 1] == MINE)
-		mine_count += getMine_Surroundings(x + 1, y);
-	if (m_iMap[y - 1][x + 1] == MINE)
-		mine_count += getMine_Surroundings(x + 1, y - 1);
-	if (m_iMap[y - 1][x] == MINE)
-		mine_count += getMine_Surroundings(x, y - 1);
-
+	mine_count = get_Surround_MineCount(x, y);
 	/*
-	상하좌우대각선 깃발이 지뢰인지 체크
+	상하좌우대각선 깃발 체크
 	*/
-	if (m_iMap[y - 1][x - 1] == FLAG) // 해당 Block이 깃발일 때
-		mine_count += getMine_Surroundings(x - 1, y - 1);
-	if (m_iMap[y][x - 1] == FLAG)
-		flag_count += getMine_Surroundings(x - 1, y);
-	if (m_iMap[y + 1][x - 1] == FLAG)
-		flag_count += getMine_Surroundings(x - 1, y + 1);
-	if (m_iMap[y + 1][x] == FLAG)
-		flag_count += getMine_Surroundings(x, y + 1);
-	if (m_iMap[y + 1][x + 1] == FLAG)
-		flag_count += getMine_Surroundings(x + 1, y + 1);
-	if (m_iMap[y][x + 1] == FLAG)
-		flag_count += getMine_Surroundings(x + 1, y);
-	if (m_iMap[y - 1][x + 1] == FLAG)
-		flag_count += getMine_Surroundings(x + 1, y - 1);
-	if (m_iMap[y - 1][x] == FLAG)
-		flag_count += getMine_Surroundings(x, y - 1);
+	flag_count = get_Surround_FlagCount(x, y);
 
-	if (mine_count == flag_count)
+	if ((mine_count == flag_count) && (flag_count != 0))
 		Open_Surroundings(x, y);
 }
 
-bool GameManager::getMine_Surroundings(int x, int y)
-{
-	bool mine = FALSE;
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
-	{
-		if (((*iter)->getX() - 41) / CARD_WIDTH == x && ((*iter)->getY() - 43) / CARD_HEIGHT == y)
-			mine =  (*iter)->GetMine();
-	}
-	return mine;
-}
-
+/*
+해당 블록 주변 8방향을 체크 & 열기
+*/
 void GameManager::Open_Surroundings(int x, int y)
 {
-	if (m_iMap[y - 1][x - 1] != FLAG) // 해당 Block이 깃발일 때
-		Check(x-1, y-1, TRUE);
-	if (m_iMap[y][x - 1] != FLAG)
-		Check(x-1, y, TRUE);
-	if (m_iMap[y + 1][x - 1] != FLAG)
-		Check(x-1, y+1, TRUE);
-	if (m_iMap[y + 1][x] != FLAG)
-		Check(x, y+1, TRUE);
-	if (m_iMap[y + 1][x + 1] != FLAG)
-		Check(x+1, y+1, TRUE);
-	if (m_iMap[y][x + 1] != FLAG)
-		Check(x+1, y, TRUE);
-	if (m_iMap[y - 1][x + 1] != FLAG)
-		Check(x+1, y-1, TRUE);
-	if (m_iMap[y - 1][x] != FLAG)
-		Check(x, y-1, TRUE);
-}
-/*
-지뢰 개수 확인 후 Block 이미지 출력
-*/
-void GameManager::setBlock(Block * pBlock, int mine_count, int x, int y)
-{
-	if (mine_count == 0)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_0));
-	else if (mine_count == 1)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_1));
-	else if (mine_count == 2)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_2));
-	else if (mine_count == 3)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_3));
-	else if (mine_count == 4)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_4));
-	else if (mine_count == 5)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_5));
-	else if (mine_count == 6)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_6));
-	else if (mine_count == 7)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_7));
-	else if (mine_count == 8)
-		pBlock->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_8));
+	Point pt;
 
-	m_iMap[y][x] = OPEN;
-}
-
-void GameManager::OnClickL(int x, int y)
-{
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
+	for (int i = 0; i < DIRECTION_END; i++)
 	{
-		if ((*iter)->OnClick(x, y))
-		{
-			if ((*iter)->GetMine())
-			{
-				//게임종료
-				MessageBox(NULL, TEXT("GameOver!!"), TEXT("게임오버"), MB_OK);
-				for (auto iter_ = m_vecBlock.begin(); iter_ != m_vecBlock.end(); iter_++)
-				{
-					(*iter_)->GameOver(m_pResManager->GetBitMap(RES_TYPE_MINE));
-				}
-				//exit(0); // 수정필요
-			}
-			else
-			{
-				int x = ((*iter)->getX() - 41) / CARD_WIDTH;
-				int y = ((*iter)->getY() - 43) / CARD_HEIGHT;
+		pt = ptDir[i];
+		int ix = x;
+		int iy = y;
 
-				(*iter)->setOpen();
-				m_iMap[y][x] = OPEN;
-				Check(x, y);
-			}
+		ix += pt.x;
+		iy += pt.y;
+		if (!Check_Range(ix, iy))
+		{
+			continue;
+		}
+		else if (m_iMap[iy][ix]->getOpen()==TRUE)
+		{
+			continue;
+		}
+		else
+		{
+			if (!m_iMap[iy][ix]->getFlag()) // 해당 Block이 깃발이 아닐 때 주변 체크 & Block 열기
+				Check(ix, iy);
 		}
 	}
+}
+
+/*
+해당 Block 주변 8방향에 지뢰가 몇개 있는지 리턴해주는 함수
+*/
+int GameManager::get_Surround_MineCount(int x, int y)
+{
+	int mine_count = 0;
+	Point pt;
+
+	for (int i = 0; i < DIRECTION_END; i++)
+	{
+		pt = ptDir[i];
+		int ix = x;
+		int iy = y;
+
+		ix += pt.x;
+		iy += pt.y;
+
+		if (Check_Range(ix, iy))
+			if (m_iMap[iy][ix]->getMine())
+				mine_count++;
+	}
+	return mine_count;
+}
+
+/*
+해당 Block 주변 8방향에 깃발이 몇개 있는지 리턴해주는 함수
+*/
+int GameManager::get_Surround_FlagCount(int x, int y)
+{
+	int flag_count = 0;
+	Point pt;
+
+	for (int i = 0; i < DIRECTION_END; i++)
+	{
+		pt = ptDir[i];
+		int ix = x;
+		int iy = y;
+
+		ix += pt.x;
+		iy += pt.y;
+
+		if (Check_Range(ix, iy))
+			if (m_iMap[iy][ix]->getFlag())
+				flag_count++;
+	}
+
+	return flag_count;
+}
+
+/*
+지뢰 개수 확인 후 개수에 맞는 Block 이미지 출력
+*/
+void GameManager::setBlock(int mine_count, int x, int y)
+{
+	if (m_iMap[y][x]->getMine())
+	{
+		GameOver();
+	}
+	else
+	{
+		if (mine_count == 0)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_0));
+		else if (mine_count == 1)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_1));
+		else if (mine_count == 2)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_2));
+		else if (mine_count == 3)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_3));
+		else if (mine_count == 4)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_4));
+		else if (mine_count == 5)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_5));
+		else if (mine_count == 6)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_6));
+		else if (mine_count == 7)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_7));
+		else if (mine_count == 8)
+			m_iMap[y][x]->NoMine(m_pResManager->GetBitMap(RES_TYPE_BLOCK_8));
+
+		m_iMap[y][x]->setOpen();
+	}
+}
+
+void GameManager::TimerStart()
+{
+	m_nTimeCount++;
 	InvalidateRect(m_hWnd, NULL, true);
 }
 
-void GameManager::OnClickR(int x, int y)
+/*
+마우스 왼쪽 클릭 이벤트
+*/
+void GameManager::OnClickL(int x, int y)
 {
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
+	for (int i = 0; i < m_iHeight; i++)
 	{
-		if ((*iter)->OnClick(x, y))
+		for (int j = 0; j < m_iWidth; j++)
 		{
-			int x = ((*iter)->getX() - 41) / CARD_WIDTH;
-			int y = ((*iter)->getY() - 43) / CARD_HEIGHT;
-			if (m_iMap[y][x] != OPEN)
+			if (m_iMap[i][j]->OnClick(x, y))
 			{
-				if ((*iter)->getFlag())
+				if (m_iMap[i][j]->getMine())
 				{
-					(*iter)->setFlag(m_pResManager->GetBitMap(RES_TYPE_BLOCK), FALSE);
-					m_iMap[y][x] = BLOCK;
+					//게임종료
+					GameOver();
+					//exit(0); // 수정필요
 				}
 				else
 				{
-					(*iter)->setFlag(m_pResManager->GetBitMap(RES_TYPE_FLAG), TRUE);
-					m_iMap[y][x] = FLAG;
+					m_iMap[i][j]->setOpen();
+					Check(j, i);
+				}
+			}
+		}
+	}
+	Victory();
+	InvalidateRect(m_hWnd, NULL, true);
+}
+
+/*
+마우스 오른쪽 클릭 이벤트
+*/
+void GameManager::OnClickR(int x, int y)
+{
+	for (int i = 0; i < m_iHeight; i++)
+	{
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			if (m_iMap[i][j]->OnClick(x, y))
+			{
+				if (m_iMap[i][j]->getOpen() == FALSE)
+				{
+					if (m_iMap[i][j]->getFlag())
+					{
+						m_iMap[i][j]->setFlag(m_pResManager->GetBitMap(RES_TYPE_BLOCK), FALSE);
+						m_nFlag_Count--;
+						m_nMine_Count++;
+					}
+					else
+					{
+						m_iMap[i][j]->setFlag(m_pResManager->GetBitMap(RES_TYPE_FLAG), TRUE);
+						m_nFlag_Count++;
+						m_nMine_Count--;
+					}
 				}
 			}
 		}
@@ -369,38 +372,135 @@ void GameManager::OnClickR(int x, int y)
 	InvalidateRect(m_hWnd, NULL, true);
 }
 
+/*
+마우스 가운데 클릭 이벤트
+*/
 void GameManager::OnClickM(int x, int y)
 {
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
+	for (int i = 0; i < m_iHeight; i++)
 	{
-		if ((*iter)->OnClick(x, y))
+		for (int j = 0; j < m_iWidth; j++)
 		{
-			int x = ((*iter)->getX() - 41) / CARD_WIDTH;
-			int y = ((*iter)->getY() - 43) / CARD_HEIGHT;
-			M_Button_Check(x, y);
+			if (m_iMap[i][j]->OnClick(x, y))
+			{
+				M_Button_Check(j, i);
+			}
 		}
 	}
+	Victory();
 	InvalidateRect(m_hWnd, NULL, true);
 }
 
+void GameManager::Victory()
+{
+	bool bVictory = TRUE;
+	for (int i = 0; i < m_iHeight; i++)
+	{
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			if (m_iMap[i][j]->getFlag() == FALSE)
+				if (m_iMap[i][j]->getMine() == TRUE)
+					bVictory = FALSE;
+		}
+	}
+
+	if (bVictory)
+	{
+		for (int i = 0; i < m_iHeight; i++)
+		{
+			for (int j = 0; j < m_iWidth; j++)
+			{
+				m_iMap[i][j]->GameOver(m_pResManager->GetBitMap(RES_TYPE_MINE));
+			}
+		}
+		KillTimer(m_hWnd, 1);
+		InvalidateRect(m_hWnd, NULL, true);
+		MessageBox(m_hWnd, TEXT("Victory!!"), TEXT("게임승리!!"), MB_OK);
+
+		SetGameMode(m_eGameMode);
+	}
+}
+void GameManager::GameOver()
+{
+	for (int i = 0; i < m_iHeight; i++)
+	{
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			m_iMap[i][j]->GameOver(m_pResManager->GetBitMap(RES_TYPE_MINE));
+		}
+	}
+	KillTimer(m_hWnd, 1);
+	InvalidateRect(m_hWnd, NULL, true);
+	MessageBox(m_hWnd, TEXT("GameOver!!"), TEXT("게임오버"), MB_OK);
+
+	SetGameMode(m_eGameMode);
+}
+void GameManager::Reset()
+{
+	for (int i = 0; i < m_iHeight; i++)
+	{
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			SAFE_DELETE(m_iMap[i][j]);
+		}
+	}
+
+	m_iWidth = (m_eGameMode + 1) * 8;
+	if (m_eGameMode == GAME_MODE_HARD)
+		m_iHeight = (m_eGameMode) * 8;
+	else
+		m_iHeight = (m_eGameMode + 1) * 8;
+
+	memset(m_iMine, 0, m_iWidth * sizeof(int));
+	memset(m_iMap, 0, m_iWidth * m_iHeight * sizeof(int));
+
+	/*
+	지뢰 생성
+	*/
+	setMine();
+	/*
+	블록 생성
+	*/
+	setBlock();
+
+	SetGameMode(m_eGameMode);
+	InvalidateRect(m_hWnd, NULL, true);
+}
 void GameManager::Draw(HDC hdc)
 {
-	m_pBackGround->Draw(hdc);
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
+	m_pBackGround->Draw(hdc, 0, 0);
+	for (int i = 0; i < m_iHeight; i++)
 	{
-		(*iter)->Draw(hdc);
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			m_iMap[i][j]->Draw(hdc);
+		}
 	}
+	wsprintf(sTime, TEXT("%d:%d:%d"), (m_nTimeCount / 60 / 60) % 60, (m_nTimeCount / 60) % 60, m_nTimeCount % 60);
+	TextOut(hdc, 170, 480, sTime, lstrlen(sTime));
+
+	wsprintf(sTime, TEXT("%d"), m_nMine_Count);
+	TextOut(hdc, 675, 480, sTime, lstrlen(sTime));
+
 }
 
 void GameManager::Release()
 {
-	for (auto iter = m_vecBlock.begin(); iter != m_vecBlock.end(); iter++)
+	for (int i = 0; i < m_iHeight; i++)
 	{
-		SAFE_DELETE(*iter);
+		for (int j = 0; j < m_iWidth; j++)
+		{
+			SAFE_DELETE(m_iMap[i][j]);
+		}
 	}
-	m_vecBlock.clear();
 
+	m_pBackGround->Release();
+	SAFE_DELETE(m_pBackGround);
+
+	m_pResManager->Release();
 	SAFE_DELETE(m_pResManager);
+
+	SAFE_DELETE(m_pThis);
 }
 
 
@@ -408,25 +508,4 @@ void GameManager::Release()
 static TCHAR text1[128];
 wsprintf(text1, TEXT("%d"), );
 MessageBox(NULL, text1, text1, MB_OK);
-*/
-
-/*
-if (m_iMap[i][j] == 2)
-continue;
-*/
-
-
-/*
-맵핑 제대로!!!!
-
-맵핑된 값이 진짜 값이 아니다.
-
-맵핑에서 mine 값은 빼고
-맵에 보이는 block, open, flag 만 표시
-mine은 맴버변수 m_bMine으로 판별하여 카운팅하고
-
-상하좌우대각선 m_bFlag와 m_bMine의 개수 카운팅하여
-M버튼 클릭시 개수가 같으면 flag 제외하고 전부 open으로 변경
-
-Draw할 때 맵핑된 값으로 그려주기
 */

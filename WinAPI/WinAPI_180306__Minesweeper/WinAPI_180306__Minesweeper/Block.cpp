@@ -47,11 +47,6 @@ void Block::setXY(int x, int y)
 	m_iY = y;
 }
 
-bool Block::GetMine()
-{
-	return m_bMine;
-}
-
 void Block::setOpen()
 {
 	m_bOpen = TRUE;
@@ -60,6 +55,11 @@ void Block::setOpen()
 bool Block::getOpen()
 {
 	return m_bOpen;
+}
+
+bool Block::getMine()
+{
+	return m_bMine;
 }
 
 bool Block::getFlag()
@@ -80,12 +80,18 @@ void Block::NoMine(BitMap * pBitmap)
 
 void Block::GameOver(BitMap* pBitmap)
 {
-	if (this->GetMine())
+	if (this->getMine())
 		m_pBblock = pBitmap;
 }
 
 Block::Block()
 {
+	m_pBblock = nullptr;
+	m_iX = 0;
+	m_iY = 0;
+	m_bMine = FALSE;
+	m_bFlag = FALSE;
+	m_bOpen = FALSE;
 }
 
 

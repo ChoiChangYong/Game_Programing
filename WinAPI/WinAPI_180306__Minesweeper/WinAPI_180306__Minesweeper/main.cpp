@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <crtdbg.h>
-#include "resource.h"
+#include "resource1.h"
 #include "GameManager.h"
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -10,9 +10,9 @@ LPCTSTR lpszClass = TEXT("Minesweeper");
 INT_PTR CALLBACK SettingDlg(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
-	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtDumpMemoryLeaks();
-	//_CrtSetBreakAlloc(156);
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtDumpMemoryLeaks();
+	//_CrtSetBreakAlloc(228);
 
 	//char* p = new char;//메모리 릭
 
@@ -83,16 +83,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		GameManager::GetInstance()->Draw(hdc);
 		EndPaint(hWnd, &ps);
 		return 0;
+	case WM_TIMER:
+		hdc = GetDC(hWnd);
+		GameManager::GetInstance()->TimerStart();
+		ReleaseDC(hWnd, hdc);
+		return 0;
 	case WM_LBUTTONUP:
 		GameManager::GetInstance()->OnClickL(LOWORD(lParam), HIWORD(lParam));
 		return 0;
 	case WM_RBUTTONUP:
 		GameManager::GetInstance()->OnClickR(LOWORD(lParam), HIWORD(lParam));
-		return 0; 
+		return 0;
 	case WM_MBUTTONDOWN:
 		GameManager::GetInstance()->OnClickM(LOWORD(lParam), HIWORD(lParam));
 		return 0; 
 	case WM_DESTROY:
+		GameManager::GetInstance()->Release();
 		PostQuitMessage(0);
 		return 0;
 	case WM_COMMAND:
@@ -104,11 +110,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		case ID_OPTION_SETTING:
 			DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, SettingDlg);
 			break;
+		case ID_OPTION_RESET:
+			GameManager::GetInstance()->Reset();
+			break;
 		}
 
 	}
 	return 0;
-}
+	}
 return (DefWindowProc(hWnd, iMessage, wParam, lParam));
 }
 

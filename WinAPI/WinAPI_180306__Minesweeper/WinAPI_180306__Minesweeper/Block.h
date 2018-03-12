@@ -23,11 +23,11 @@ public:
 	int getY();
 	void setXY(int x, int y);
 
-	bool GetMine();
 
 	void setOpen();
 	bool getOpen();
 
+	bool getMine();
 	bool getFlag();
 	void setFlag(BitMap * pBitmap, bool flag);
 
