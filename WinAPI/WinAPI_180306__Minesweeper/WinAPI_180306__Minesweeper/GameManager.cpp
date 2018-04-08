@@ -141,7 +141,6 @@ void GameManager::SetGameMode(GAME_MODE mode)
 */
 void GameManager::Check(int x, int y)
 {
-	Point pt;
 	int mine_count = 0;
 	/*
 	상하좌우대각선 지뢰 체크
@@ -254,19 +253,19 @@ int GameManager::get_Surround_FlagCount(int x, int y)
 	int flag_count = 0;
 	Point pt;
 
-	for (int i = 0; i < DIRECTION_END; i++)
-	{
-		pt = ptDir[i];
-		int ix = x;
-		int iy = y;
+		for (int i = 0; i < DIRECTION_END; i++)
+		{
+			pt = ptDir[i];
+			int ix = x;
+			int iy = y;
 
-		ix += pt.x;
-		iy += pt.y;
+			ix += pt.x;
+			iy += pt.y;
 
-		if (Check_Range(ix, iy))
-			if (m_iMap[iy][ix]->getFlag())
-				flag_count++;
-	}
+			if (Check_Range(ix, iy))
+				if (m_iMap[iy][ix]->getFlag())
+					flag_count++;
+		}
 
 	return flag_count;
 }
@@ -481,7 +480,6 @@ void GameManager::Draw(HDC hdc)
 
 	wsprintf(sTime, TEXT("%d"), m_nMine_Count);
 	TextOut(hdc, 675, 480, sTime, lstrlen(sTime));
-
 }
 
 void GameManager::Release()
